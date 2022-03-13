@@ -39,6 +39,7 @@
                         this.is2D ? 0 : this.randomMinMax(-1 * window.innerHeight, window.innerHeight));
                     this.velocity = (new THREE.Vector3()).randomDirection();
                     this.acceleration = (new THREE.Vector3()).randomDirection();
+                    this.maxForce = 0.5;
 
                     if (this.is2D)
                     {
@@ -59,6 +60,21 @@
                     {
                         this.perceptionRadius = 30;
                         this.circle = this.drawPerceptionCircle();
+                    }
+                }
+
+                edges(){
+                    if (this.position.x > (window.innerWidth/2)){
+                        this.position.x = -1 * (window.innerWidth/2);
+                    }
+                    else if (this.position.x < (-1 * window.innerWidth/2)){
+                        this.position.x = window.innerWidth/2;
+                    }
+                    if (this.position.y > (window.innerHeight/2)){
+                        this.position.y = -1 * (window.innerHeight/2);
+                    }
+                    else if (this.position.y < (-1 * (window.innerHeight/2))){
+                        this.position.y = window.innerHeight/2;
                     }
                 }
 
@@ -111,6 +127,7 @@
                     if (total > 0){
                         steering.divideScalar(total);
                         steering.sub(this.velocity);
+                        steering.clampLength(this.maxForce, steering.length());
                     }
 
                     return steering;
@@ -128,7 +145,7 @@
 
             // main logic
             var cones = [];
-            for(let i = 0; i < 1000; i++){
+            for(let i = 0; i < 50; i++){
                 var cone = new Cone();
                 cones.push(cone);
                 scene.add( cone.circle );
@@ -139,6 +156,7 @@
 				requestAnimationFrame( animate );
 
                 for (const c of cones){
+                    c.edges();
                     c.flock(cones);
                     c.update();
                 }
