@@ -25,9 +25,14 @@
             class Cone {
                 constructor(){
                     this.is2D = true;
+                    this.isPerceptionCircleVisible = true;
+
+                    // ui
                     this.geometry = new THREE.ConeGeometry(3, 10, 32);
                     this.material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
                     this.cone = new THREE.Mesh( this.geometry, this.material );
+
+                    // position
                     this.position = new THREE.Vector3(
                         this.randomMinMax(-1 * window.innerWidth, window.innerWidth), 
                         this.randomMinMax(-1 * window.innerHeight, window.innerHeight), 
@@ -41,16 +46,49 @@
                         this.acceleration.z = 0;
                     }
 
-                    this.updateConePos();
+                    // update ui with position value
+                    this.cone.position.x = this.position.x;
+                    this.cone.position.y = this.position.y;
+                    this.cone.position.z = this.position.z;
                     this.cone.rotation.x = Math.random();
                     this.cone.rotation.y = Math.random();
                     this.cone.rotation.z = Math.random();
+
+                    // draw circle around cone
+                    if (this.isPerceptionCircleVisible)
+                    {
+                        this.perceptionRadius = 30;
+                        this.circle = this.drawPerceptionCircle();
+                    }
+                }
+
+                drawPerceptionCircle(){
+                    var geometry = new THREE.CircleGeometry( this.perceptionRadius, 32 );
+                    var material = new THREE.MeshBasicMaterial( { color: 0x9A33FF } );
+                    var circle = new THREE.LineLoop( geometry, material );
+                    circle.position.set(
+                        this.cone.position.x,
+                        this.cone.position.y,
+                        this.cone.position.z);
+                    return circle;
                 }
 
                 updateConePos(){
                     this.cone.position.x = this.position.x;
                     this.cone.position.y = this.position.y;
                     this.cone.position.z = this.position.z;
+                    this.cone.rotation.x += 0.01;
+                    this.cone.rotation.y += 0.01;
+                    this.cone.rotation.z += 0.01;
+
+                    // draw circle around cone
+                    if (this.isPerceptionCircleVisible)
+                    {
+                        this.circle.position.set(
+                            this.cone.position.x,
+                            this.cone.position.y,
+                            this.cone.position.z);
+                    }
                 }
 
                 update(){
@@ -60,12 +98,11 @@
                 }
 
                 align(boids){
-                    let perceptionRadius = 10;
                     let steering = new THREE.Vector3();
                     let total = 0;
                     for (let other of boids){
                         let d = this.position.distanceTo(other.position);
-                        if (other != this && d < perceptionRadius){
+                        if (other != this && d < this.perceptionRadius){
                             steering.add(other.velocity);
                             total++;
                         }
@@ -87,12 +124,14 @@
                 randomMinMax(min, max){
                     return Math.random() * (max-min) + min;
                 }
-            }
+            } // end of Cone class
 
+            // main logic
             var cones = [];
             for(let i = 0; i < 1000; i++){
                 var cone = new Cone();
                 cones.push(cone);
+                scene.add( cone.circle );
                 scene.add( cone.cone );
             }
 
