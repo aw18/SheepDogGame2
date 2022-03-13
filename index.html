@@ -19,13 +19,13 @@
 			const renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
 			document.body.appendChild( renderer.domElement );
-            camera.position.z = 400;
+            camera.position.z = 500;
 
             // spawn cones
             class Cone {
                 constructor(){
                     this.is2D = true;
-                    this.isPerceptionCircleVisible = true;
+                    this.isPerceptionCircleVisible = false;
 
                     // ui
                     this.geometry = new THREE.ConeGeometry(3, 10, 32);
@@ -39,7 +39,8 @@
                         this.is2D ? 0 : this.randomMinMax(-1 * window.innerHeight, window.innerHeight));
                     this.velocity = (new THREE.Vector3()).randomDirection();
                     this.acceleration = (new THREE.Vector3()).randomDirection();
-                    this.maxForce = 0.5;
+                    this.maxForce = 1;
+                    this.maxSpeed = 1;
 
                     if (this.is2D)
                     {
@@ -56,9 +57,9 @@
                     this.cone.rotation.z = Math.random();
 
                     // draw circle around cone
+                    this.perceptionRadius = 300;
                     if (this.isPerceptionCircleVisible)
                     {
-                        this.perceptionRadius = 30;
                         this.circle = this.drawPerceptionCircle();
                     }
                 }
@@ -127,15 +128,38 @@
                     if (total > 0){
                         steering.divideScalar(total);
                         steering.sub(this.velocity);
-                        steering.clampLength(this.maxForce, steering.length());
+                        steering.clampLength(this.maxSpeed, this.maxForce);
+                    }
+
+                    return steering;
+                }
+
+                cohesion(boids){
+                    let steering = new THREE.Vector3();
+                    let total = 0;
+                    for (let other of boids){
+                        let d = this.position.distanceTo(other.position);
+                        if (other != this && d < this.perceptionRadius){
+                            steering.add(other.position);
+                            total++;
+                        }
+                    }
+
+                    if (total > 0){
+                        steering.divideScalar(total);
+                        steering.sub(this.position);
+                        steering.sub(this.velocity);
+                        steering.clampLength(this.maxSpeed, this.maxForce);
                     }
 
                     return steering;
                 }
 
                 flock(boids){
-                    let alignment = this.align(boids);
-                    this.acceleration = alignment;
+                    // let alignment = this.align(boids);
+                    let cohesion1 = this.cohesion(boids);
+                    // this.acceleration = alignment;
+                    this.acceleration = cohesion1;
                 }
 
                 randomMinMax(min, max){
@@ -148,7 +172,10 @@
             for(let i = 0; i < 50; i++){
                 var cone = new Cone();
                 cones.push(cone);
-                scene.add( cone.circle );
+                if (this.isPerceptionCircleVisible)
+                {
+                    scene.add( cone.circle );
+                }
                 scene.add( cone.cone );
             }
 
