@@ -39,7 +39,7 @@
                         this.is2D ? 0 : this.randomMinMax(-1 * window.innerHeight, window.innerHeight));
                     this.velocity = (new THREE.Vector3()).randomDirection();
                     this.acceleration = (new THREE.Vector3()).randomDirection();
-                    this.maxForce = 0.02;
+                    this.maxForce = 1;
                     this.maxSpeed = 1;
 
                     if (this.is2D)
@@ -57,7 +57,7 @@
                     this.cone.rotation.z = Math.random();
 
                     // draw circle around cone
-                    this.perceptionRadius = 30;
+                    this.perceptionRadius = 50;
                     if (this.isPerceptionCircleVisible)
                     {
                         this.circle = this.drawPerceptionCircle();
@@ -159,11 +159,37 @@
                     return steering;
                 }
 
+                separation(boids){
+                    let steering = new THREE.Vector3();
+                    let total = 0;
+                    for (let other of boids){
+                        let d = this.position.distanceTo(other.position);
+                        if (other != this && d < this.perceptionRadius){
+                            let diff = new THREE.Vector3();
+                            diff.subVectors(other.position,this.position);
+                            diff.divideScalar(d);
+                            steering.add(diff);
+                            total++;
+                        }
+                    }
+
+                    if (total > 0){
+                        steering.divideScalar(total);
+                        steering.setLength(this.maxSpeed);
+                        steering.sub(this.velocity);
+                        steering.clampLength(0, this.maxForce);
+                    }
+
+                    return steering;
+                }
+
                 flock(boids){
-                    let alignment = this.align(boids);
-                    let cohesion1 = this.cohesion(boids);
-                    this.acceleration.add(alignment);
-                    this.acceleration.add(cohesion1);
+                    //let alignment = this.align(boids);
+                    //let cohesion1 = this.cohesion(boids);
+                    let separation = this.separation(boids);
+                    //this.acceleration.add(alignment);
+                    //this.acceleration.add(cohesion1);
+                    this.acceleration.add(separation);
                 }
 
                 randomMinMax(min, max){
