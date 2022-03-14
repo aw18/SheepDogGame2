@@ -9,8 +9,48 @@
 		</style>
 	</head>
 	<body>
+        <div class="slider_alignment">
+            Alignment:
+            <input type="range" min="1" max="10" value="1" class="slider" id="alignment_range">
+            Multiplier Value: <span id="align_demo"></span>
+        </div>
+        <div class="slider_cohesion">
+            Cohesion:
+            <input type="range" min="1" max="10" value="1" class="slider" id="cohesion_range">
+            Multiplier Value: <span id="cohesion_demo"></span>
+        </div>
+        <div class="slider_separation">
+            Separation:
+            <input type="range" min="1" max="10" value="1" class="slider" id="separate_range">
+            Multiplier Value: <span id="separate_demo"></span>
+        </div>
 		<script src="js/three.js"></script>
 		<script>
+            // slider logic
+            var slider_align = document.getElementById("alignment_range");
+            var output_align = document.getElementById("align_demo");
+            output_align.innerHTML = slider_align.value; // Display the default slider value
+
+            var slider_cohesion = document.getElementById("cohesion_range");
+            var output_cohesion = document.getElementById("cohesion_demo");
+            output_cohesion.innerHTML = slider_cohesion.value; // Display the default slider value
+
+            var slider_separate = document.getElementById("separate_range");
+            var output_separate = document.getElementById("separate_demo");
+            output_separate.innerHTML = slider_separate.value; // Display the default slider value
+
+            // Update the current slider value (each time you drag the slider handle)
+            slider_align.oninput = function() {
+                output_align.innerHTML = this.value;
+            }
+
+            slider_cohesion.oninput = function() {
+                output_cohesion.innerHTML = this.value;
+            }
+
+            slider_separate.oninput = function() {
+                output_separate.innerHTML = this.value;
+            }
 			
             // initialize scene, camera, renderer
             const scene = new THREE.Scene();
@@ -184,11 +224,16 @@
                 }
 
                 flock(boids){
-                    //let alignment = this.align(boids);
-                    //let cohesion1 = this.cohesion(boids);
+                    let alignment = this.align(boids);
+                    let cohesion1 = this.cohesion(boids);
                     let separation = this.separation(boids);
-                    //this.acceleration.add(alignment);
-                    //this.acceleration.add(cohesion1);
+
+                    alignment.multiplyScalar(slider_align.value);
+                    cohesion1.multiplyScalar(slider_cohesion.value);
+                    separation.multiplyScalar(slider_separate.value);
+
+                    this.acceleration.add(alignment);
+                    this.acceleration.add(cohesion1);
                     this.acceleration.add(separation);
                 }
 
@@ -223,5 +268,6 @@
 
 			animate();
 		</script>
+        
 	</body>
 </html>
